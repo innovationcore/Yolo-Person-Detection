@@ -19,4 +19,4 @@ The scripts here use the YOLO model from the [Ultralytics library](https://githu
 1. Clone this repository.
 2. Install dependencies:
    ```bash
-   pip install ultralytics opencv-python
+   pip install -r requirements.txt
