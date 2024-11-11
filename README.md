@@ -24,7 +24,7 @@ The scripts here use the YOLO model from the [Ultralytics library](https://githu
    cd path/to/your/project
 
    # Step 2: Create a virtual environment named 'venv'
-   python3 -m venv venv
+   py -m venv venv
 
    # Step 3: Activate the virtual environment
    # On macOS and Linux
