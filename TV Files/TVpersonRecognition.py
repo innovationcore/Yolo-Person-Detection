@@ -139,6 +139,7 @@ def main():
                             break
                         results = model(frame)
 
+                        
                         if any(int(box.cls[0]) == person_label for box in results[0].boxes):
                             last_seen_time = time.time()
 
