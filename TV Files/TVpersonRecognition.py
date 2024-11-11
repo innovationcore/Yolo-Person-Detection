@@ -103,6 +103,8 @@ def main():
 
     cap = cv2.VideoCapture(0)
 
+    print("Starting detection.")
+
     while True:
         ret, frame = cap.read()
         if not ret:
@@ -113,21 +115,31 @@ def main():
         if (time.time() - start_time > frame_interval):
             start_time = time.time()
 
+            # take an estimation from the model
             results = model(frame)
 
+            # check if any of the results are identified as a "person", if so add one to counter, and update last_seen_time
             if any(int(box.cls[0]) == person_label for box in results[0].boxes):
                 person_detected_count += 1
                 last_seen_time = time.time()
 
+                # if a person has been seen for two consecutive frames
                 if person_detected_count >= 2:
-                    last_seen_time = time.time()
+                    last_seen_time = time.time() # possibly redundant
+                    print("Seen person wishing to interact. Stopping detection, starting interaction.")
 
+                    # while the time since we last saw a person is less than threshold
+                    # 1. take another frame
+                    # 2. run another estimation
+                    # 3. check for person
+                    # 4. draw glasses
                     while (time.time() - last_seen_time) < detection_time_threshold:
                         ret, frame = cap.read()
                         if not ret:
                             break
                         results = model(frame)
 
+                        
                         if any(int(box.cls[0]) == person_label for box in results[0].boxes):
                             last_seen_time = time.time()
 
@@ -143,6 +155,7 @@ def main():
                                 break
 
                     person_detected_count = 0
+                    print("Threshold passed, no longer detecting person. Stopping interaction, resuming detection")
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
