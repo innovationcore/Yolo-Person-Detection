@@ -2,7 +2,8 @@ from ultralytics import YOLO
 import cv2
 import math
 
-UKBlue = (0,51,160)
+UKBlue = (0, 51, 160)
+Red = (255, 0, 0)
 
 # Start webcam
 cap = cv2.VideoCapture(0)
@@ -14,6 +15,11 @@ model = YOLO("yolo_weights/yolo11n-pose.pt")
 
 # Class names (for this model, we're only interested in "person")
 classNames = ["person"]  # Only tracking "person" objects
+
+# Get frame height
+_, frame = cap.read()
+frame_height = frame.shape[0]
+halfway_point = frame_height // 2  # Midpoint of the screen
 
 while True:
     success, img = cap.read()
@@ -34,7 +40,7 @@ while True:
                 x1, y1, x2, y2 = map(int, box.xyxy[0])  # Convert to int values
                 confidence = math.ceil((box.conf[0] * 100)) / 100  # Round confidence to two decimals
 
-                # Draw bounding box
+                # Draw the full bounding box (original detection)
                 cv2.rectangle(img, (x1, y1), (x2, y2), UKBlue, 3)
 
                 # Display label and confidence
@@ -42,20 +48,32 @@ while True:
                 org = (x1, y1 - 10)  # Position label above the box
                 font = cv2.FONT_HERSHEY_SIMPLEX
                 fontScale = 0.5
-                color = UKBlue
                 thickness = 2
-                cv2.putText(img, label, org, font, fontScale, color, thickness)
+                cv2.putText(img, label, org, font, fontScale, UKBlue, thickness)
 
-                height = y2-y1
-                width = x2-x1
+                full_height = y2 - y1
+                full_width = x2 - x1
 
-                # check if threshhold is reached, if so fall is detected and labeled on display
-                if height - width < 0:
-                    cv2.putText(img, "Fall Detected", (x1, y1 - 30), font, fontScale, (255, 0, 0), thickness)
+                # Check fall condition for the full bounding box
+                if full_width > full_height:
+                    cv2.putText(img, "Fall Detected", (x1, y1 - 30), font, fontScale, UKBlue, thickness)
 
+                # Restrict bounding box to bottom half of the screen
+                if y2 > halfway_point:
+                    clipped_y1 = max(y1, halfway_point)  # Adjust the top of the box if needed
+
+                    # Draw the clipped bounding box in red
+                    cv2.rectangle(img, (x1, clipped_y1), (x2, y2), Red, 3)
+
+                    clipped_height = y2 - clipped_y1
+                    clipped_width = x2 - x1
+
+                    # Check fall condition for the clipped bounding box
+                    if clipped_width > clipped_height:
+                        cv2.putText(img, "Fall Detected", (x1, clipped_y1 - 30), font, fontScale, Red, thickness)
 
     # Display the webcam feed with bounding boxes and labels
-    cv2.imshow('Webcam - Person Detection', img)
+    cv2.imshow('Webcam - Person Detection with Clipped Box', img)
 
     # Break the loop if 'q' is pressed
     if cv2.waitKey(1) == ord('q'):
